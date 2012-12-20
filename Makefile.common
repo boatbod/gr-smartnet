@@ -35,7 +35,8 @@ AM_CPPFLAGS = \
 STD_DEFINES_AND_INCLUDES = \
 	$(DEFINES) \
 	-I$(GNURADIO_CORE_INCLUDEDIR) \
-	-I$(GNURADIO_CORE_INCLUDEDIR)/swig
+	-I$(GNURADIO_CORE_INCLUDEDIR)/swig \
+	-I/usr/local/include/gruel/swig	
 
 # includes
 grincludedir = $(includedir)/gnuradio
