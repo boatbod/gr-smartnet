@@ -32,7 +32,7 @@
 %{
 #include "gnuradio_swig_bug_workaround.h"	// mandatory bug fix
 //include any user-created C headers here
-#include "smartnet_types.h"
+#include "smartnet/types.h"
 #include "smartnet_deinterleave.h"
 #include "smartnet_crc.h"
 #include "smartnet_subchannel_framer.h"

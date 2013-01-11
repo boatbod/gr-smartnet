@@ -28,9 +28,10 @@
 #include "smartnet_crc.h"
 #include <gr_io_signature.h>
 #include <stdio.h>
+#include <iostream>
 #include <gr_tags.h>
 #include <sstream>
-#include <smartnet_types.h>
+#include "smartnet/types.h"
 
 #define VERBOSE 1
 

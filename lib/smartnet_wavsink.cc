@@ -24,7 +24,7 @@
 #include "config.h"
 #endif
 
-#include <smartnet_wavsink.h>
+#include "smartnet_wavsink.h"
 #include <gr_io_signature.h>
 #include <gri_wavfile.h>
 #include <stdexcept>

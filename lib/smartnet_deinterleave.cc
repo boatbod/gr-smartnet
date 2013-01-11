@@ -25,9 +25,10 @@
 #include "config.h"
 #endif
 
-#include <smartnet_deinterleave.h>
+#include "smartnet_deinterleave.h"
 #include <gr_io_signature.h>
 #include <gr_tags.h>
+#include <iostream>
 
 #define VERBOSE 0
 
