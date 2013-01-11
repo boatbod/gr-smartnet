@@ -10,7 +10,7 @@
 from gnuradio import gr, gru, blks2, optfir, digital
 from gnuradio import audio
 from gnuradio import eng_notation
-from gnuradio import uhd
+#from gnuradio import uhd
 from fsk_demod import fsk_demod
 from optparse import OptionParser
 from gnuradio.eng_option import eng_option

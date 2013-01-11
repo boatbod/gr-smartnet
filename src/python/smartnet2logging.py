@@ -11,7 +11,6 @@ from gnuradio import gr, gru, blks2, optfir, digital
 from grc_gnuradio import blks2 as grc_blks2
 from gnuradio import audio
 from gnuradio import eng_notation
-from gnuradio import uhd
 from fsk_demod import fsk_demod
 from logging_receiver import logging_receiver
 from optparse import OptionParser
