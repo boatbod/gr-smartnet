@@ -32,7 +32,7 @@
 #include <sstream>
 #include <smartnet_types.h>
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 /*
  * Create a new instance of smartnet_crc and return
