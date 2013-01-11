@@ -44,7 +44,9 @@ end of this document.
 How to Build gr-smartnet
 ======================================================================
 
-  (1) Ensure that you have installed gnuradio-core
+  (1) Ensure that you have installed gnuradio-core 3.6.1 with the patch:
+  https://github.com/brad-anton/gnuradio/blob/master/gnuradio_gri_wav-v0.1.patch
+  
 
   (2) Building from cmake:
 
