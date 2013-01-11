@@ -19,6 +19,8 @@
 # Boston, MA 02110-1301, USA.
 # 
 
+Welcome to gr-smartnet!
+======================================================================
 This package implements a trunk-tracking scanner for GNU Radio. It 
 is a work-in-progress, but it is already possible to listen to 
 and follow conversations on a Motorola Type II SmartNet trunked
@@ -33,6 +35,43 @@ the trunk and logging these to disk as .wav files, with associated
 timestamps in .txt files. This allows you to continuously log
 timestamped conversations, with which you can, for instance,
 reconstruct a complete incident response from all parties involved.
+
+Please see http://github.com/bistromath/gr-smartnet and forks for
+more infromation.  There is also additional description at the
+end of this document.
+
+
+How to Build gr-smartnet
+======================================================================
+
+  (1) Ensure that you have installed gnuradio-core
+
+  (2) Building from cmake:
+
+      $ mkdir $(builddir)
+      $ cd $(builddir)
+      $ cmake [OPTIONS] $(srcdir)
+      $ make
+      $ make test
+      $ sudo make install
+
+
+That's it!
+
+Options:
+Useful options include setting the install prefix and the build type:
+
+  -DCMAKE_INSTALL_PREFIX=<directory to install to>
+  -DCMAKE_BUILD_TYPE="<type>"
+  -DPYTHON_LIBRARY=<Python framework directory>
+
+Currently, gr-smartnet has a "Debug" type that builds with '-g -O2'
+useful for debugging the software and a "Release" type that builds
+with '-O3', which is the default.
+
+
+Details
+======================================================================
 
 As it currently stands, the program cannot decode APCO P25 or other
 encoded voice data. There is a separate project, OP25, to do this:
@@ -87,23 +126,3 @@ must already exist.
 
 This package requires that gnuradio-core is already installed.  It
 also depends on some GNU Radio prerequisites, such as boost.
-
-To build the examples from the tarball use the normal recipe:
-
-  $ ./configure
-  $ make
-  $ make check
-
-If you're building from CVS, you'll need to use this sequence, since
-CVS doesn't contain configure or the generated Makefiles.
-
-  $ ./bootstrap
-  $ ./configure
-  $ make
-  $ make check
-
-
-The doc directory is not built by default.  This is to avoid spurious
-build problems on systems that don't have xmlto installed.  If you
-have xmlto and its dependencies installed, you can build the html
-version of the howto article by cd'ing to doc and invoking make.

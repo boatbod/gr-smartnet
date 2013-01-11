@@ -19,7 +19,22 @@
 # Boston, MA 02110-1301, USA.
 # 
 
+2013-01: Lokkju Brennr
+  - Migrated to CMake build system to bring current with Gnuradio
+
+2012-12: Christ LaFlash
+  - RTL support and fixing Gruel dependencies
+  
+2012-06: Nick Foster
+  - SWIG cleanup
+
+2012-02: Nick Foster
+  - UHD and Gnuradio updates
+  - general build cleanup
+
+2011-03: Nick Foster
+  - initial move to github from cgran.org
+  
+  
 For the blow by blow changes for each file, please consult
-http://gnuradio.org/trac/timeline
-	
-It's got everything that used to be in here ;)
+http://github.com/bistromath/gr-smartnet and it's fork network
