@@ -70,24 +70,25 @@ static void smartnet_ecc(char *out, const char *in) {
     //since the bitstream is still interleaved with the P bits, we can do this while running
     expected[0] = in[0] & 0x01; //info bit
     expected[1] = in[0] & 0x01; //this is a parity bit, prev bits were 0 so we call x ^ 0 = x
-    for(int k = 2; k < 76*2; k+=2) {
-	expected[k] = in[k] & 0x01; //info bit
-	expected[k+1] = (in[k] & 0x01) ^ (in[k-2] & 0x01); //parity bit
+    
+    for(int k = 2; k < 76; k+=2) {
+      expected[k] = in[k] & 0x01; //info bit
+      expected[k+1] = (in[k] & 0x01) ^ (in[k-2] & 0x01); //parity bit
     }
 
     for(int k = 0; k < 76; k++) {
-	syndrome[k] = expected[k] ^ (in[k] & 0x01); //calculate the syndrome
-	if(VERBOSE) if(syndrome[k]) std::cout << "Bit error at bit " << k << std::endl;
+      syndrome[k] = expected[k] ^ (in[k] & 0x01); //calculate the syndrome
+	    //if(VERBOSE) if(syndrome[k]) std::cout << "Bit error at bit " << k << std::endl;
     }
 
     for(int k = 0; k < 38-1; k++) {
-	//now we correct the data using the syndrome: if two consecutive
-	//parity bits are flipped, you've got a bad previous bit
-	if(syndrome[2*k+1] && syndrome[2*k+3]) {
-	    out[k] = (in[2*k] & 0x01) ? 0 : 1; //byte-safe bit flip
-	    if(VERBOSE) std::cout << "I just flipped a bit!" << std::endl;
-	}
-	else out[k] = in[2*k];
+	    //now we correct the data using the syndrome: if two consecutive
+	    //parity bits are flipped, you've got a bad previous bit
+	    if(syndrome[2*k+1] && syndrome[2*k+3]) {
+	      out[k] = (in[2*k] & 0x01) ? 0 : 1; //byte-safe bit flip
+	      //if(VERBOSE) std::cout << "I just flipped a bit!" << std::endl;
+	    }
+	    else out[k] = in[2*k];
     }
 }
 
@@ -98,18 +99,17 @@ static bool crc(const char *in) {
 
     //calc expected crc
     for(int j=0; j<27; j++) {
-	if(crcop & 0x01) crcop = (crcop >> 1)^0x0225;
-	else crcop >>= 1;
-	if (in[j] & 0x01) crcaccum = crcaccum ^ crcop;
+	    if(crcop & 0x01) crcop = (crcop >> 1)^0x0225;
+	    else crcop >>= 1;
+	    if (in[j] & 0x01) crcaccum = crcaccum ^ crcop;
     }
 
     //load given crc
     crcgiven = 0x0000;
     for(int j=0; j<10; j++) {
-	crcgiven <<= 1;
-	crcgiven += !bool(in[j+27] & 0x01);
+	    crcgiven <<= 1;
+	    crcgiven += !bool(in[j+27] & 0x01);
     }
-
     return (crcgiven == crcaccum);
 }
 
@@ -145,38 +145,36 @@ smartnet_crc::work (int noutput_items,
 
     int size = noutput_items - 76;
     if(size <= 0) {
-	return 0; //better luck next time
+      return 0; //better luck next time
     }
-
     uint64_t abs_sample_cnt = nitems_read(0);
     std::vector<gr_tag_t> frame_tags;
 
     get_tags_in_range(frame_tags, 0, abs_sample_cnt, abs_sample_cnt + size, pmt::pmt_string_to_symbol("smartnet_frame"));
     if(frame_tags.size() == 0) {
-	return 0; //sad trombone
+      return 0; //sad trombone
     }
 
     std::vector<gr_tag_t>::iterator tag_iter;
     for(tag_iter = frame_tags.begin(); tag_iter != frame_tags.end(); tag_iter++) {
-	uint64_t mark = tag_iter->offset - abs_sample_cnt;
-	if(VERBOSE) std::cout << "found a frame at " << mark << std::endl;
+      uint64_t mark = tag_iter->offset - abs_sample_cnt;
+      if(VERBOSE) std::cout << "found a frame at " << mark << std::endl;
+      char databits[38];
+      smartnet_ecc(databits, &in[mark]);
+      bool crc_ok = crc(databits);
 
-	char databits[38];
-	smartnet_ecc(databits, &in[mark]);
-	bool crc_ok = crc(databits);
+	    if(crc_ok) {
+	      if(VERBOSE) std::cout << "CRC OK" << std::endl;
+	      //parse the message into readable chunks
+	      smartnet_packet pkt = parse(databits);
 
-	if(crc_ok) {
-	    if(VERBOSE) std::cout << "CRC OK" << std::endl;
-	    //parse the message into readable chunks
-	    smartnet_packet pkt = parse(databits);
-
-	    //and throw it at the msgq
-	    std::ostringstream payload;
-	    payload.str("");
-	    payload << pkt.address << "," << pkt.groupflag << "," << pkt.command;
-	    gr_message_sptr msg = gr_make_message_from_string(std::string(payload.str()));
-	    d_queue->handle(msg);
-	} else if (VERBOSE) std::cout << "CRC FAILED" << std::endl;
+	      //and throw it at the msgq
+	      std::ostringstream payload;
+	      payload.str("");
+	      payload << pkt.address << "," << pkt.groupflag << "," << pkt.command;
+	      gr_message_sptr msg = gr_make_message_from_string(std::string(payload.str()));
+	      d_queue->handle(msg);
+	    } else if (VERBOSE) std::cout << "CRC FAILED" << std::endl;
     }
     return size;
 }

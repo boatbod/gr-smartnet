@@ -24,6 +24,7 @@ import time
 import gnuradio.gr.gr_threading as _threading
 import csv
 import os
+import sys
 
 class top_block_runner(_threading.Thread):
     def __init__(self, tb):
@@ -116,17 +117,10 @@ class my_top_block(gr.top_block):
         
         self.demod = fsk_demod(options)
         self.start_correlator = gr.correlate_access_code_tag_bb("10101100",0,"smartnet_preamble") #should mark start of packet #digital.
-        #self.start_correlator = digital.correlate_access_code_bb("10101100",0) #should mark start of packet #digital.
-#        self.smartnet_sync = smartnet.sync()
         self.smartnet_deinterleave = smartnet.deinterleave()
-#        self.smartnet_parity = smartnet.parity()
-        self.smartnet_crc = smartnet.crc(queue)
-#        self.smartnet_packetize = smartnet.packetize()
-#        self.parse = smartnet.parse(queue) #packet-based. this simply posts lightly-formatted messages to the queue.
-        
+        self.smartnet_crc = smartnet.crc(queue)       
         self.connect(self.u, self.demod)
-                                                        #self.smartnet_sync,        self.smartnet_parity,
-        self.connect(self.demod, self.start_correlator,  self.smartnet_deinterleave,  self.smartnet_crc)#, self.smartnet_packetize, self.parse)
+        self.connect(self.demod, self.start_correlator,  self.smartnet_deinterleave, self.smartnet_crc)
 
         
     def tune(self, freq):

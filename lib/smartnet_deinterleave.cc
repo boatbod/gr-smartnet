@@ -30,7 +30,7 @@
 #include <gr_tags.h>
 #include <iostream>
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 /*
  * Create a new instance of smartnet_deinterleave and return
@@ -93,14 +93,14 @@ smartnet_deinterleave::general_work (int noutput_items,
     const char *in = (const char *) input_items[0];
     char *out = (char *) output_items[0];
 
-    if(VERBOSE) std::cout << "Deinterleave called with " << noutput_items << " outputs" << std::endl;
+    //if(VERBOSE) std::cout << "Deinterleave called with " << noutput_items << " outputs" << std::endl;
 
     //you will need to look ahead 84 bits to post 76 bits of data
     //TODO this needs to be able to handle shorter frames while keeping state in order to end gracefully
     int size = ninput_items[0] - 84;
     if(size <= 0) {
-	consume_each(0);
-	return 0; //better luck next time
+      consume_each(0);
+      return 0; //better luck next time
     }
 
     uint64_t abs_sample_cnt = nitems_read(0);
@@ -110,33 +110,39 @@ smartnet_deinterleave::general_work (int noutput_items,
 
     get_tags_in_range(preamble_tags, 0, abs_sample_cnt, abs_sample_cnt + size, pmt::pmt_string_to_symbol("smartnet_preamble"));
     if(preamble_tags.size() == 0) {
-	consume_each(size);
-	return 0;
+	    consume_each(size);
+	    return 0;
     }
 
     std::vector<gr_tag_t>::iterator tag_iter;
     for(tag_iter = preamble_tags.begin(); tag_iter != preamble_tags.end(); tag_iter++) {
-	uint64_t mark = tag_iter->offset - abs_sample_cnt;
+	    uint64_t mark = tag_iter->offset - abs_sample_cnt;
+	    if(VERBOSE) std::cout << "found a preamble at " << tag_iter->offset << std::endl;
+      for(int k=0; k<76/4; k++) {
+	      for(int l=0; l<4; l++) {
+		      out[k*4 + l] = in[mark + k + l*19];
+	      }
+      }
 
-	if(VERBOSE) std::cout << "found a preamble at " << tag_iter->offset << std::endl;
-
-	for(int k=0; k<76/4; k++) {
-	    for(int l=0; l<4; l++) {
-		out[k*4 + l] = in[mark + k + l*19];
-	    }
-	}
-
-	//since you're a nonsynchronized block, you have to reissue a
-	//tag with the correct output sample number
-	add_item_tag(0, //stream ID
+      //since you're a nonsynchronized block, you have to reissue a
+      //tag with the correct output sample number
+      add_item_tag(0, //stream ID
 		     nitems_written(0) + mark, //sample
 		     pmt::pmt_string_to_symbol("smartnet_frame"), //key
 		     pmt::pmt_t() //data (unused here)
 		    );
-	outlen += 76;
+		  outlen += 76;
     }
 
-    if(VERBOSE) std::cout << "consumed " << size << ", produced " << outlen << std::endl;
+    if(VERBOSE) {
+      // print out raw data
+      std::cout << "consumed " << size << ", produced " << outlen << " : ";
+      for(int j=0;j<outlen;j++) {
+        if(out[j]) std::cout << "0";
+        else std::cout << "1";
+      }
+      std::cout << std::endl;
+    }
     consume_each(preamble_tags.back().offset - abs_sample_cnt + 84);
     return outlen;
 }
