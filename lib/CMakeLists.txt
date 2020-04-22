@@ -1,4 +1,4 @@
-# Copyright 2011,2012 Free Software Foundation, Inc.
+# Copyright 2011,2012,2016 Free Software Foundation, Inc.
 #
 # This file is part of GNU Radio
 #
@@ -25,18 +25,36 @@ include(GrPlatform) #define LIB_SUFFIX
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
 
-add_library(gnuradio-smartnet SHARED smartnet_deinterleave.cc smartnet_crc.cc smartnet_subchannel_framer.cc smartnet_wavsink.cc)
-target_link_libraries(gnuradio-smartnet ${Boost_LIBRARIES} ${GRUEL_LIBRARIES} ${GNURADIO_CORE_LIBRARIES})
+list(APPEND smartnet_sources
+    crc_impl.cc
+    deinterleave_impl.cc
+    parity_impl.cc
+    parser_impl.cc
+    subchannel_framer_impl.cc
+    wavsink_impl.cc
+)
+
+set(smartnet_sources "${smartnet_sources}" PARENT_SCOPE)
+if(NOT smartnet_sources)
+	MESSAGE(STATUS "No C++ sources... skipping lib/")
+	return()
+endif(NOT smartnet_sources)
+
+add_library(gnuradio-smartnet SHARED ${smartnet_sources})
+target_link_libraries(gnuradio-smartnet ${Boost_LIBRARIES} ${GNURADIO_ALL_LIBRARIES})
 set_target_properties(gnuradio-smartnet PROPERTIES DEFINE_SYMBOL "gnuradio_smartnet_EXPORTS")
+
+if(APPLE)
+    set_target_properties(gnuradio-smartnet PROPERTIES
+        INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
+    )
+endif(APPLE)
 
 ########################################################################
 # Install built library files
 ########################################################################
-install(TARGETS gnuradio-smartnet
-    LIBRARY DESTINATION lib${LIB_SUFFIX} # .so/.dylib file
-    ARCHIVE DESTINATION lib${LIB_SUFFIX} # .lib file
-    RUNTIME DESTINATION bin              # .dll file
-)
+include(GrMiscUtils)
+GR_LIBRARY_FOO(gnuradio-smartnet RUNTIME_COMPONENT "smartnet_runtime" DEVEL_COMPONENT "smartnet_devel")
 
 ########################################################################
 # Build and register unit test
@@ -45,21 +63,26 @@ include(GrTest)
 
 include_directories(${CPPUNIT_INCLUDE_DIRS})
 
-#list(APPEND test_smartnet_sources
-#  ${CMAKE_CURRENT_SOURCE_DIR}/test_smartnet.cc
-#  ${CMAKE_CURRENT_SOURCE_DIR}/qa_smartnet.cc
-#  ${CMAKE_CURRENT_SOURCE_DIR}/qa_wavsink.cc
-#)
+list(APPEND test_smartnet_sources
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_smartnet.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/qa_smartnet.cc
+)
 
-#add_executable(test-smartnet ${test_smartnet_sources})
+add_executable(test-smartnet ${test_smartnet_sources})
 
-#target_link_libraries(
-#  test-smartnet
-#  ${GNURADIO_CORE_LIBRARIES}
-#  ${GNURADIO_WAVELET_LIBRARIES}
-#  ${Boost_LIBRARIES}
-#  ${CPPUNIT_LIBRARIES}
-#  gnuradio-smartnet
-#)
+target_link_libraries(
+  test-smartnet
+  ${GNURADIO_RUNTIME_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${CPPUNIT_LIBRARIES}
+  gnuradio-smartnet
+)
 
-#GR_ADD_TEST(test_smartnet test-smartnet)
+GR_ADD_TEST(test_smartnet test-smartnet)
+
+########################################################################
+# Print summary
+########################################################################
+message(STATUS "Using install prefix: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "Building for version: ${VERSION} / ${LIBVER}")
+

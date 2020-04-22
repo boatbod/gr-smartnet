@@ -35,15 +35,13 @@ GR_PYTHON_INSTALL(
     logging_receiver.py
     smartnet2logging.py
     smartnet2decode.py
-    DESTINATION ${GR_PYTHON_DIR}/gnuradio/smartnet
+    DESTINATION ${GR_PYTHON_DIR}/smartnet
 )
 
 ########################################################################
 # Handle the unit tests
 ########################################################################
-
 include(GrTest)
 
 set(GR_TEST_TARGET_DEPS gnuradio-smartnet)
-set(GR_TEST_PYTHON_DIRS ${CMAKE_BINARY_DIR}/swig ${CMAKE_BINARY_DIR}/python)
-#GR_ADD_TEST(qa_smartnet2logging ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_smartnet2logging.py)
+set(GR_TEST_PYTHON_DIRS ${CMAKE_BINARY_DIR}/swig)

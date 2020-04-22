@@ -7,7 +7,8 @@
     This program does not include audio output support. It logs channels to disk by talkgroup name. If you don't specify what talkgroups to log, it logs EVERYTHING.
 """
 
-from gnuradio import gr, gru, blks2, optfir, digital
+#from gnuradio import gr, gru, blks2, optfir, digital
+from gnuradio import gr, gru, blocks, digital
 from grc_gnuradio import blks2 as grc_blks2
 from gnuradio import audio
 from gnuradio import eng_notation
@@ -15,7 +16,8 @@ from fsk_demod import fsk_demod
 from logging_receiver import logging_receiver
 from optparse import OptionParser
 from gnuradio.eng_option import eng_option
-from gnuradio import smartnet
+#from gnuradio import smartnet
+import smartnet
 #from gnuradio.wxgui import slider
 #from gnuradio.wxgui import stdgui2, fftsink2, form
 

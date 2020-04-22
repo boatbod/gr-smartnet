@@ -18,10 +18,18 @@
 # Boston, MA 02110-1301, USA.
 
 ########################################################################
+# Check if there is C++ code at all
+########################################################################
+if(NOT smartnet_sources)
+	MESSAGE(STATUS "No C++ sources... skipping swig/")
+	return()
+endif(NOT smartnet_sources)
+
+########################################################################
 # Include swig generation macros
 ########################################################################
 find_package(SWIG)
-find_package(PythonLibs)
+find_package(PythonLibs 2)
 if(NOT SWIG_FOUND OR NOT PYTHONLIBS_FOUND)
     return()
 endif()
@@ -31,15 +39,9 @@ include(GrPython)
 ########################################################################
 # Setup swig generation
 ########################################################################
-foreach(incdir ${GNURADIO_CORE_INCLUDE_DIRS})
-    list(APPEND GR_SWIG_INCLUDE_DIRS ${incdir}/swig)
+foreach(incdir ${GNURADIO_RUNTIME_INCLUDE_DIRS})
+    list(APPEND GR_SWIG_INCLUDE_DIRS ${incdir}/gnuradio/swig)
 endforeach(incdir)
-
-foreach(incdir ${GRUEL_INCLUDE_DIRS})
-    list(APPEND GR_SWIG_INCLUDE_DIRS ${incdir}/gruel/swig)
-endforeach(incdir)
-
-list(APPEND GR_SWIG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../lib)
 
 set(GR_SWIG_LIBRARIES gnuradio-smartnet)
 set(GR_SWIG_DOC_FILE ${CMAKE_CURRENT_BINARY_DIR}/smartnet_swig_doc.i)
@@ -50,7 +52,7 @@ GR_SWIG_MAKE(smartnet_swig smartnet_swig.i)
 ########################################################################
 # Install the build swig module
 ########################################################################
-GR_SWIG_INSTALL(TARGETS smartnet_swig DESTINATION ${GR_PYTHON_DIR}/gnuradio/smartnet)
+GR_SWIG_INSTALL(TARGETS smartnet_swig DESTINATION ${GR_PYTHON_DIR}/smartnet)
 
 ########################################################################
 # Install swig .i files for development

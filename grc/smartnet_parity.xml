@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <block>
-  <name>wavsink</name>
-  <key>smartnet_wavsink</key>
+  <name>parity</name>
+  <key>smartnet_parity</key>
   <category>[smartnet]</category>
   <import>import smartnet</import>
-  <make>smartnet.wavsink($*filename, $n_channels, $sample_rate, $bits_per_sample)</make>
+  <make>smartnet.parity()</make>
   <!-- Make one 'param' node for every Parameter you want settable from the GUI.
        Sub-nodes:
        * name

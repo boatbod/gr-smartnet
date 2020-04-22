@@ -18,8 +18,13 @@
 # Boston, MA 02110-1301, USA.
 
 install(FILES
-    smartnet_deinterleave.xml
     smartnet_crc.xml
+    smartnet_crc.xml
+    smartnet_deinterleave.xml
+    smartnet_parity.xml
+    smartnet_parser.xml
+    smartnet_parser.xml
+    smartnet_parser.xml
     smartnet_subchannel_framer.xml
     smartnet_wavsink.xml DESTINATION share/gnuradio/grc/blocks
 )

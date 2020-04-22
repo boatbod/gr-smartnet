@@ -1,8 +1,8 @@
 #!/usr/env/python
 
-from gnuradio import blks2, gr, gru
-from grc_gnuradio import blks2 as grc_blks2
-from gnuradio import smartnet
+from gnuradio import blocks, gr, gru
+#from grc_gnuradio import blks2 as grc_blks2
+import smartnet
 
 import string
 import random
