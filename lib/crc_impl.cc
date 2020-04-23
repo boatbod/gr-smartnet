@@ -31,11 +31,12 @@
 #include <sstream>
 #include <smartnet/types.h>
 
+#define VERBOSE 1
+
 namespace gr {
     namespace smartnet {
 
-        crc::sptr
-        crc::make(gr::msg_queue::sptr queue)
+        crc::sptr crc::make(gr::msg_queue::sptr queue)
         {
             return gnuradio::get_initial_sptr
                 (new crc_impl(queue));
@@ -135,17 +136,45 @@ namespace gr {
             return pkt;
         }
 
-        int
-        crc_impl::work(int noutput_items,
+        int crc_impl::work(int noutput_items,
                     gr_vector_const_void_star &input_items,
-                    gr_vector_void_star &output_items)
-        {
+                    gr_vector_void_star &output_items) {
             const char *in = (const char *) input_items[0];
 
-            // Do <+signal processing+>
+            int size = noutput_items - 76;
+            if(size <= 0) {
+                return 0; //better luck next time
+            }
+            uint64_t abs_sample_cnt = nitems_read(0);
+            std::vector<gr::tag_t> frame_tags;
 
-            // Tell runtime system how many output items we produced.
-            return noutput_items;
+            get_tags_in_range(frame_tags, 0, abs_sample_cnt, abs_sample_cnt + size, pmt::string_to_symbol("smartnet_frame"));
+            if(frame_tags.size() == 0) {
+                return 0; //sad trombone
+            }
+
+            std::vector<gr::tag_t>::iterator tag_iter;
+            for(tag_iter = frame_tags.begin(); tag_iter != frame_tags.end(); tag_iter++) {
+                uint64_t mark = tag_iter->offset - abs_sample_cnt;
+                if(VERBOSE) std::cout << "found a frame at " << mark << std::endl;
+                char databits[38];
+                ecc(databits, &in[mark]);
+                bool crc_ok = calc_crc(databits);
+
+                if(crc_ok) {
+                    if(VERBOSE) std::cout << "CRC OK" << std::endl;
+                    //parse the message into readable chunks
+                    smartnet_packet pkt = parse(databits);
+
+                    //and throw it at the msgq
+                    std::ostringstream payload;
+                    payload.str("");
+                    payload << pkt.address << "," << pkt.groupflag << "," << pkt.command;
+                    gr::message::sptr msg = gr::message::make_from_string(std::string(payload.str()));
+                    d_queue->handle(msg);
+                } else if (VERBOSE) std::cout << "CRC FAILED" << std::endl;
+            }
+            return size;
         }
 
     } /* namespace smartnet */
