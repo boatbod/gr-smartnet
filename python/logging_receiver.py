@@ -1,7 +1,6 @@
 #!/usr/env/python
 
 from gnuradio import blocks, gr, gru
-#from grc_gnuradio import blks2 as grc_blks2
 import smartnet
 
 import string
@@ -28,19 +27,19 @@ class logging_receiver(gr.hier_block2):
 		if options.volume is None:
 			options.volume = 3.0
 
-		self.audiotaps = gr.firdes.low_pass(1, self.rate, 8000, 2000, gr.firdes.WIN_HANN)
+		self.audiotaps = filter.firdes.low_pass(1, self.rate, 8000, 2000, filter.firdes.WIN_HANN)
 
 		self.prefilter_decim = int(self.rate / self.audiorate)
 
 		#the audio prefilter is a channel selection filter.
-		self.audio_prefilter = gr.freq_xlating_fir_filter_ccf(self.prefilter_decim, #decimation
+		self.audio_prefilter = filter.freq_xlating_fir_filter_ccf(self.prefilter_decim, #decimation
 								      self.audiotaps, #taps
 								      0, #freq offset
 								      int(self.rate)) #sampling rate
 
 		#on a trunked network where you know you will have good signal, a carrier power squelch works well. real FM receviers use a noise squelch, where
 		#the received audio is high-passed above the cutoff and then fed to a reverse squelch. If the power is then BELOW a threshold, open the squelch.
-		self.squelch = gr.pwr_squelch_cc(options.squelch, #squelch point
+		self.squelch = analog.pwr_squelch_cc(options.squelch, #squelch point
 										   alpha = 0.1, #wat
 										   ramp = 10, #wat
 										   gate = True) #gated so that the audio recording doesn't contain blank spaces between transmissions
@@ -54,11 +53,11 @@ class logging_receiver(gr.hier_block2):
 						    75e-6) #deemphasis constant
 
 		#the filtering removes FSK data woobling from the subaudible channel
-		self.audiofilttaps = gr.firdes.high_pass(1, self.audiorate, 300, 50, gr.firdes.WIN_HANN)
+		self.audiofilttaps = filter.firdes.high_pass(1, self.audiorate, 300, 50, filter.firdes.WIN_HANN)
 
-		self.audiofilt = gr.fir_filter_fff(1, self.audiofilttaps)
+		self.audiofilt = filter.fir_filter_fff(1, self.audiofilttaps)
 		
-		#self.audiogain = gr.multiply_const_ff(options.volume)
+		#self.audiogain = blocks.multiply_const_ff(options.volume)
 
 		#here we generate a random filename in the form /tmp/[random].wav, and then use it for the wavstamp block. this avoids collisions later on. remember to clean up these files when deallocating.
 

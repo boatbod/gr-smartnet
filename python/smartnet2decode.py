@@ -7,14 +7,13 @@
     Based on your AIS decoding software, which is in turn based on the gr-pager code and the gr-air code.
 """
 
-#from gnuradio import gr, gru, blocks, optfir, digital
 from gnuradio import gr, gru, blocks, digital
 from gnuradio import audio
 from gnuradio import eng_notation
 from fsk_demod import fsk_demod
 from optparse import OptionParser
 from gnuradio.eng_option import eng_option
-import smartnet as _smartnet
+import smartnet as smartnet
 
 import time
 import gnuradio.gr.gr_threading as _threading
@@ -38,7 +37,7 @@ class my_top_block(gr.top_block):
         gr.top_block.__init__(self)
 
         if options.filename is not None:
-            self.fs = gr.file_source(gr.sizeof_gr_complex, options.filename)
+            self.fs = block.file_source(gr.sizeof_gr_complex, options.filename)
             self.rate = options.rate
 
         else:
@@ -89,8 +88,8 @@ class my_top_block(gr.top_block):
         self.start_correlator = digital.correlate_access_code_tag_bb("10101100",
                                                                 0,
                                                                 "smartnet_preamble") #should mark start of packet
-        self.smartnet_deinterleave = _smartnet.deinterleave()
-        self.smartnet_crc = _smartnet.crc(queue)
+        self.smartnet_deinterleave = smartnet.deinterleave()
+        self.smartnet_crc = smartnet.crc(queue)
 
         if options.filename is None:
             self.connect(self.u, self.demod)

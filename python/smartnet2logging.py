@@ -7,16 +7,13 @@
     This program does not include audio output support. It logs channels to disk by talkgroup name. If you don't specify what talkgroups to log, it logs EVERYTHING.
 """
 
-#from gnuradio import gr, gru, blks2, optfir, digital
 from gnuradio import gr, gru, blocks, digital
-from grc_gnuradio import blks2 as grc_blks2
 from gnuradio import audio
 from gnuradio import eng_notation
 from fsk_demod import fsk_demod
 from logging_receiver import logging_receiver
 from optparse import OptionParser
 from gnuradio.eng_option import eng_option
-#from gnuradio import smartnet
 import smartnet
 #from gnuradio.wxgui import slider
 #from gnuradio.wxgui import stdgui2, fftsink2, form
@@ -48,55 +45,40 @@ class my_top_block(gr.top_block):
         self.args = args
         self.rate = int(options.rate)
         
-        if options.filename is None and options.udp is None and not options.rtlsdr:
-          #UHD source by default
-          from gnuradio import uhd
-          self.u = uhd.single_usrp_source(options.args, uhd.io_type_t.COMPLEX_FLOAT32, 1)
-          time_spec = uhd.time_spec(0.0)
-          self.u.set_time_now(time_spec)
-        
-          #if(options.rx_subdev_spec is None):
-          #  options.rx_subdev_spec = ""
-          #self.u.set_subdev_spec(options.rx_subdev_spec)
-          if not options.antenna is None:
-            self.u.set_antenna(options.antenna)
-        
-          self.u.set_samp_rate(rate)
-          self.rate = int(self.u.get_samp_rate()) #retrieve actual
-        
-          if options.gain is None: #set to halfway
-            g = self.u.get_gain_range()
-            options.gain = (g.start()+g.stop()) / 2.0
-        
-          if not(self.tune(options.freq)):
-            print "Failed to set initial frequency"
-        
-          print "Setting gain to %i" % options.gain
-          self.u.set_gain(options.gain)
-          print "Gain is %i" % self.u.get_gain()
-          
-        elif options.rtlsdr: #RTLSDR dongle
-            import osmosdr
-            self.u = osmosdr.source_c(options.args)
-            self.u.set_sample_rate(2.4e6) #fixed for RTL dongles
-            if not self.u.set_center_freq(options.centerfreq - options.error):
+        if options.filename is None and options.udp is None:
+            try:
+                import osmosdr
+                self.u = osmosdr.source(options.args)
+            except Exception:
+                sys.stderr.write("osmosdr source_c creation failure\n")
+                sys.exit(1)
+
+            if options.gains:
+                for tup in options.gains.split(","):
+                    name, gain = tup.split(":")
+                    gain = int(gain)
+                    sys.stderr.write("setting gain %s to %d\n" % (name, gain))
+                    self.u.set_gain(gain, name)
+
+            self.rate = self.u.set_sample_rate(options.rate)
+            self.u.set_bandwidth(self.rate)
+
+            if options.freq_corr:
+                self.u.set_freq_corr(options.freq_corr)
+ 
+            # Set the antenna
+            if(options.antenna):
+                self.u.set_antenna(options.antenna, 0)
+            
+            self.centerfreq = options.centerfreq
+            print "Tuning to: %fMHz" % (self.centerfreq - options.error)
+            if not(self.tune(options.centerfreq - options.error)):
                 print "Failed to set initial frequency"
-        
-            self.u.set_gain_mode(0) #manual gain mode
-            if options.gain is None:
-                options.gain = 25#34
-                
-            self.u.set_gain(options.gain)
-            print "Gain is %i" % self.u.get_gain()
-        
-            use_resampler = True
-            self.rate=2.4e6
-                    
         else:
           if options.filename is not None:
-            self.u = gr.file_source(gr.sizeof_gr_complex, options.filename)
+            self.u = blocks.file_source(gr.sizeof_gr_complex, options.filename)
           elif options.udp is not None:
-            self.u = gr.udp_source(gr.sizeof_gr_complex, "localhost", options.udp)
+            self.u = blocks.udp_source(gr.sizeof_gr_complex, "localhost", options.udp)
           else:
             raise Exception("No valid source selected")
         
@@ -118,7 +100,7 @@ class my_top_block(gr.top_block):
         print "Control channel offset: %f" % options.offset
         
         self.demod = fsk_demod(options)
-        self.start_correlator = gr.correlate_access_code_tag_bb("10101100",0,"smartnet_preamble") #should mark start of packet #digital.
+        self.start_correlator = digital.correlate_access_code_tag_bb("10101100",0,"smartnet_preamble") #should mark start of packet #digital.
         self.smartnet_deinterleave = smartnet.deinterleave()
         self.smartnet_crc = smartnet.crc(queue)       
         self.connect(self.u, self.demod)
@@ -194,14 +176,19 @@ def main():
                         help="UHD subdev spec", default=None)
     parser.add_option("-A", "--antenna", type="string", default=None,
                         help="select Rx Antenna where appropriate")
-    parser.add_option("-d","--rtlsdr", action="store_true", default=False,
-                        help="Use RTLSDR dongle instead of UHD source")
     parser.add_option("-u","--udp", type="int", default=None,
                         help="Use UDP source on specified port")
     parser.add_option("-D", "--args", type="string",
                         help="arguments to pass to UHD/RTL constructor", default="")
     parser.add_option("-F","--filename", type="string", default=None,
                         help="read data from file instead of USRP")
+    parser.add_option("--args", type="string", default="",
+                        help="device args")
+    parser.add_option("-N", "--gains", type="string", default=None,
+                        help="gain settings")
+    parser.add_option("-q", "--freq-corr", type="eng_float", default=0.0,
+                        help="frequency correction")
+
     #receive_path.add_options(parser, expert_grp)
 
     (options, args) = parser.parse_args ()
