@@ -28,7 +28,7 @@
 #include <gnuradio/tags.h>
 #include <iostream>
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 namespace gr {
     namespace smartnet {

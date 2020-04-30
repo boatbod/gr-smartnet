@@ -31,7 +31,7 @@
 #include <sstream>
 #include <smartnet/types.h>
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 namespace gr {
     namespace smartnet {
@@ -171,7 +171,9 @@ namespace gr {
                     payload.str("");
                     payload << pkt.address << "," << pkt.groupflag << "," << pkt.command;
                     gr::message::sptr msg = gr::message::make_from_string(std::string(payload.str()));
-                    d_queue->handle(msg);
+                    std::cout << "CMD: " << payload.str() << std::endl;
+                    if ( !(d_queue->full_p()) )
+                        d_queue->handle(msg);
                 } else if (VERBOSE) std::cout << "CRC FAILED" << std::endl;
             }
             return size;
